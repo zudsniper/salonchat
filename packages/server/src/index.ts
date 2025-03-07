@@ -2,6 +2,7 @@ import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import { config } from './config';
 
 const app = express();
 const server = http.createServer(app);
@@ -11,8 +12,6 @@ const io = new Server(server, {
     methods: ["GET", "POST"]
   }
 });
-
-const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(cors());
@@ -38,7 +37,7 @@ io.on('connection', (socket) => {
 });
 
 // Start server
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+server.listen(config.port, () => {
+  console.log(`Server running on port ${config.port} in ${config.nodeEnv} mode`);
 });
 

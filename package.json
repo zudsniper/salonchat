@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run build --workspaces",
@@ -12,6 +14,9 @@
     "dev": "npm run dev --workspaces --parallel"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "author": "zudsniper",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7"
+  }
 }

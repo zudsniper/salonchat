@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { config } from './config';
 
 interface ChatMessage {
   id: string;
@@ -16,7 +17,7 @@ const App: React.FC = () => {
   
   useEffect(() => {
     // Connect to the server
-    socketRef.current = io('http://localhost:4000');
+    socketRef.current = io(config.apiUrl);
     
     // Listen for incoming messages
     socketRef.current.on('message', (newMessage: ChatMessage) => {
