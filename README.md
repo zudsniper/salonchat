@@ -1,42 +1,96 @@
-# SalonChat
+# Salon Chat - AI Assistant for Apotheca Salon
 
-A real-time chat application with a React frontend and Express backend.
+Conversation-aware AI assistant for Apotheca Salon using Cloudflare's serverless infrastructure and Retrieval Augmented Generation (RAG).
 
-## Environment Setup
+## Architecture
 
-This project uses a shared `.env` file in the root directory for both the frontend and backend subprojects.
+- **Frontend**: React-based chat interface
+- **Backend**: Cloudflare Workers
+- **Database**: Cloudflare D1
+- **Vector Database**: Cloudflare Vectorize
+- **AI**: Cloudflare Workers AI with RAG
 
-### Available Environment Variables
+## Project Structure
 
-- `PORT`: The port for the backend server (default: 4000)
-- `VITE_API_URL`: The URL for the frontend to connect to the backend (default: http://localhost:4000)
-- `NODE_ENV`: The environment mode (development, production, etc.)
+- `packages/chat` - Frontend chat component
+- `vectorize-setup` - Vector database setup tools
+- `resources` - Service data and prompts
+- `scripts` - Deployment scripts
 
-### Setup Instructions
+## Setup
 
-1. Copy the `.env.example` file to `.env` in the root directory:
-   ```
-   cp .env.example .env
-   ```
+### Prerequisites
 
-2. Modify the values in the `.env` file as needed.
+- Node.js ≥18.0.0
+- Cloudflare account with Workers Paid plan
+- Wrangler CLI ≥3.0.0
 
-3. The environment variables will be automatically loaded by both subprojects.
+### Initial Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Set up vectorize and database
+npm run setup:vectorize
+
+# Deploy backend
+npm run deploy:backend
+
+# Build frontend
+npm run deploy:chat
+```
+
+### Environment Configuration
+
+Create a `.env` file from `.env.example`:
+
+```
+# Required for frontend
+VITE_API_URL=https://salon-chat-backend.your-account.workers.dev
+
+# Optional - use OpenAI/Anthropic instead of Workers AI
+# OPENAI_API_KEY=your_openai_key
+# ANTHROPIC_API_KEY=your_anthropic_key
+```
 
 ## Development
 
-```
-npm install
-npm run dev
-```
+```bash
+# Start frontend dev server
+npm run dev:chat
 
-This will start both the frontend and backend in development mode.
-
-## Production
-
-```
-npm run build
-npm start
+# Test vector search
+cd vectorize-setup && node test-search.js
 ```
 
-This will build both subprojects and start the backend server. 
+## Deployment
+
+```bash
+# Deploy everything
+npm run deploy
+
+# Deploy individual components
+npm run setup:vectorize
+npm run deploy:backend
+npm run deploy:chat
+```
+
+## RAG Implementation
+
+The system uses RAG to provide contextually relevant responses:
+
+1. Service descriptions stored in D1
+2. Vector embeddings in Vectorize
+3. User queries converted to embeddings
+4. Semantically similar services retrieved
+5. Context provided to AI for improved responses
+
+## Documentation
+
+- `IMPLEMENTATION.md` - Technical implementation details
+- `vectorize-setup/README.md` - Vector database setup instructions
+
+## License
+
+ISC

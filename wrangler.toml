@@ -1,0 +1,22 @@
+name = "salon-chat-backend"
+main = "salon-chat-backend.js"
+compatibility_date = "2025-04-01"
+
+# Bind the salon database
+[[d1_databases]]
+binding = "SALON_DB"
+database_name = "salon-db"
+database_id = "f2445643-edc0-4dc9-85d2-d094290dcfa6"
+
+# Bind AI for embeddings and inference
+[[ai]]
+binding = "AI"
+
+# Bind Vectorize index
+[[vectorize]]
+binding = "SALON_VECTORIZE"
+index_name = "salon-vectorize"
+
+# Optionally configure environment variables
+[vars]
+# OPENAI_API_KEY = "" # Uncomment to use OpenAI instead of Workers AI

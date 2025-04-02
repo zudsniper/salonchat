@@ -1,16 +1,44 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
-import { dirname } from 'path';
+// Chat configuration
 
-// Get the directory name of the current module
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// API URL for the backend
+export const apiUrl = process.env.VITE_API_URL || 'https://salon-chat-backend.your-account.workers.dev';
 
-// Load environment variables from the root .env file
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+// Default system prompt
+export const defaultSystemPrompt = 'You are an expert hairstylist AI chatbot for Apotheca salon. You help clients determine what hair services they need.';
 
-export const config = {
-  apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:4000',
-  nodeEnv: process.env.NODE_ENV || 'development',
-}; 
+// Chat UI configuration
+export const chatConfig = {
+  // Visual configuration
+  appearance: {
+    accentColor: '#d05a9c',
+    fontFamily: "'Montserrat', 'Arial', sans-serif",
+    bubbleRadius: '20px',
+    height: '500px',
+    width: '350px',
+  },
+
+  // Behavior configuration
+  behavior: {
+    initialMessageDelay: 800,
+    typingIndicatorDelay: 500,
+    autoScroll: true,
+    persistConversation: true,
+  },
+
+  // Content configuration
+  content: {
+    headerTitle: 'Beauty Salon Assistant',
+    welcomeMessage: 'Hello! I\'m your Apotheca Salon Assistant. How can I help you today?',
+    inputPlaceholder: 'Ask about salon services, appointments, etc...',
+    clearButtonLabel: 'Clear Conversation',
+    sendButtonLabel: 'Send',
+    loadingLabel: 'Sending...',
+    errorMessage: 'Sorry, I couldn\'t process your request. Please try again.',
+  }
+};
+
+export default {
+  apiUrl,
+  defaultSystemPrompt,
+  chatConfig,
+};
