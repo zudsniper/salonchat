@@ -251,6 +251,13 @@ export class CloudflareChatService {
   }
 
   /**
+   * Get current session ID
+   */
+  getSessionId(): string | null {
+    return this.sessionId;
+  }
+
+  /**
    * Get available models
    */
   async getModels(): Promise<string[]> {

@@ -329,10 +329,64 @@ const App: React.FC = () => {
     }
   };
   
+  // Handle saving conversation as markdown
+  const handleSaveConversation = () => {
+    // Generate a timestamp for the filename
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `conversation-${timestamp}.md`;
+    
+    // Get the model display name for metadata
+    const modelName = currentModel ? getModelDisplayName(currentModel) : 'Unknown Model';
+    
+    // Create markdown content with metadata as YAML frontmatter
+    let markdownContent = `---
+timestamp: ${new Date().toISOString()}
+model: ${modelName}
+session_id: ${chatService.getSessionId() || 'Unknown'}
+message_count: ${messages.length}
+saved_at: ${new Date().toLocaleString()}
+---
+
+# Conversation ${new Date().toLocaleString()}
+
+`;
+    
+    // Add each message to the markdown
+    messages.forEach((msg) => {
+      const role = msg.role === 'user' ? 'User' : 'Assistant';
+      const time = new Date(msg.timestamp).toLocaleString();
+      markdownContent += `## ${role} (${time})\n\n${msg.content}\n\n`;
+    });
+    
+    // Create a download link
+    const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 100);
+  };
+  
   return (
     <div className="salon-app-container">
       <div className="salon-header">
         <h1>{chatConfig.content.headerTitle}</h1>
+        <button 
+          className="save-button" 
+          onClick={handleSaveConversation}
+          aria-label="Save Conversation"
+        >
+          Save
+        </button>
         <div className="salon-header-controls">
           <div className="model-selector" ref={modelDropdownRef}>
             <button 
