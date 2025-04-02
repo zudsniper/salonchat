@@ -107,7 +107,11 @@
     "price_from": 42,
     "category": "Haircut",
     "description": "Indulge in a pampering experience designed for your short, above-the-earlobe haircut. Our service begins with a consultation to personalize your scissor or razor cut, ensuring it flatters your features and hair type. De-stress with calming aromatherapy as our stylists treat you to a relaxing scalp and neck massage. A refreshing steam towel prepares your hair for a meticulous short cut, expertly crafted by our team. To empower you to maintain your stylish look, the service concludes with a personalized styling lesson.",
-    "details": {}
+    "details": {
+        "not_for": [
+            "changing current length significantly -- suggest a Transformation service instead"
+        ]
+    }
   },
   {
     "name": "Medium Length Haircut - Jawline to Collarbone",
@@ -128,7 +132,11 @@
     "price_from": 63,
     "category": "Haircut",
     "description": "Indulge your waist-to-elbow tresses with our transformative \"Unleash Your Rapunzel\" haircut experience. This pampering service begins with a personalized consultation to craft the perfect cut for your long locks. Breathe in calming scents and unwind with a rejuvenating scalp and neck massage. A refreshing steam towel prepares your hair for our expert stylists to meticulously craft your dream cut, while a styling lesson empowers you to maintain healthy, flowing hair.",
-    "details": {}
+    "details": {
+        "not_for": [
+            "just conventionally long hair"
+        ]
+    }
   },
   {
     "name": "New Growth",

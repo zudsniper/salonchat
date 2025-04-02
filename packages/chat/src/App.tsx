@@ -475,7 +475,6 @@ saved_at: ${new Date().toLocaleString()}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={chatConfig.content.inputPlaceholder}
-            disabled={loading}
             className="salon-message-input"
             aria-label="Message input"
           />
