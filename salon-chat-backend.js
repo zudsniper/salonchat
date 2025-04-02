@@ -8,11 +8,11 @@
 // ----------------- Constants -----------------
 
 // Default model for inference
-const DEFAULT_MODEL = "@hf/google/gemma-7b-it";
+const DEFAULT_MODEL = "@cf/meta/llama-3.1-8b-instruct";
 // Embedding model for vector search
 const EMBEDDING_MODEL = "@cf/baai/bge-base-en-v1.5";
 // Maximum number of relevant services to retrieve
-const MAX_RELEVANT_DOCS = 5;
+const MAX_RELEVANT_DOCS = 3;
 
 // ----------------- Router Setup -----------------
 
@@ -398,7 +398,7 @@ async function generateAIResponse(message, services, history, env, model) {
       services.forEach(service => {
         contextText += `Service: ${service.name}\n`;
         contextText += `Category: ${service.category}\n`;
-        contextText += `Price: ${service.price}\n`;
+        contextText += `Price: ${service.price_from}\n`;
         contextText += `Description: ${service.description}\n`;
         
         // Add detailed service information if available
@@ -642,72 +642,72 @@ async function getModels(env) {
       {
         id: "llama-2-7b-chat-fp16",
         provider: "Meta",
-        fullName: "@cf/Meta/llama-2-7b-chat-fp16"
+        fullName: "@cf/meta/llama-2-7b-chat-fp16"
       },
       {
         id: "llama-2-7b-chat-int8",
         provider: "Meta",
-        fullName: "@cf/Meta/llama-2-7b-chat-int8"
+        fullName: "@cf/meta/llama-2-7b-chat-int8"
       },
       {
         id: "llama-3-8b-instruct-awq",
         provider: "Meta",
-        fullName: "@cf/Meta/llama-3-8b-instruct-awq"
+        fullName: "@cf/meta/llama-3-8b-instruct-awq"
       },
       {
         id: "llama-3-8b-instruct",
         provider: "Meta",
-        fullName: "@cf/Meta/llama-3-8b-instruct"
+        fullName: "@cf/meta/llama-3-8b-instruct"
       },
       {
         id: "llama-3.1-70b-instruct",
         provider: "Meta",
-        fullName: "@cf/Meta/llama-3.1-70b-instruct"
+        fullName: "@cf/meta/llama-3.1-70b-instruct"
       },
       {
         id: "llama-3.1-8b-instruct-awq",
         provider: "Meta",
-        fullName: "@cf/Meta/llama-3.1-8b-instruct-awq"
+        fullName: "@cf/meta/llama-3.1-8b-instruct-awq"
       },
       {
         id: "llama-3.1-8b-instruct-fp8",
         provider: "Meta",
-        fullName: "@cf/Meta/llama-3.1-8b-instruct-fp8"
+        fullName: "@cf/meta/llama-3.1-8b-instruct-fp8"
       },
       {
         id: "llama-3.1-8b-instruct-fast",
         provider: "Meta",
-        fullName: "@cf/Meta/llama-3.1-8b-instruct-fast"
+        fullName: "@cf/meta/llama-3.1-8b-instruct-fast"
       },
       {
         id: "llama-3.1-8b-instruct",
         provider: "Meta",
-        fullName: "@cf/Meta/llama-3.1-8b-instruct"
+        fullName: "@cf/meta/llama-3.1-8b-instruct"
       },
       {
         id: "llama-3.2-11b-vision-instruct",
         provider: "Meta",
-        fullName: "@cf/Meta/llama-3.2-11b-vision-instruct"
+        fullName: "@cf/meta/llama-3.2-11b-vision-instruct"
       },
       {
         id: "llama-3.2-1b-instruct",
         provider: "Meta",
-        fullName: "@cf/Meta/llama-3.2-1b-instruct"
+        fullName: "@cf/meta/llama-3.2-1b-instruct"
       },
       {
         id: "llama-3.2-3b-instruct",
         provider: "Meta",
-        fullName: "@cf/Meta/llama-3.2-3b-instruct"
+        fullName: "@cf/meta/llama-3.2-3b-instruct"
       },
       {
         id: "llama-3.3-70b-instruct-fp8-fast",
         provider: "Meta",
-        fullName: "@cf/Meta/llama-3.3-70b-instruct-fp8-fast"
+        fullName: "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
       },
       {
         id: "llama-guard-3-8b",
         provider: "Meta",
-        fullName: "@cf/Meta/llama-guard-3-8b"
+        fullName: "@cf/meta/llama-guard-3-8b"
       },
       {
         id: "llamaguard-7b-awq",
@@ -727,17 +727,17 @@ async function getModels(env) {
       {
         id: "mistral-7b-instruct-v0.1",
         provider: "MistralAI",
-        fullName: "@cf/MistralAI/mistral-7b-instruct-v0.1"
+        fullName: "@cf/mistralai/mistral-7b-instruct-v0.1"
       },
       {
         id: "mistral-7b-instruct-v0.2-lora",
         provider: "MistralAI",
-        fullName: "@cf/MistralAI/mistral-7b-instruct-v0.2-lora"
+        fullName: "@cf/mistralai/mistral-7b-instruct-v0.2-lora"
       },
       {
         id: "mistral-7b-instruct-v0.2",
         provider: "MistralAI",
-        fullName: "@cf/MistralAI/mistral-7b-instruct-v0.2"
+        fullName: "@cf/mistralai/mistral-7b-instruct-v0.2"
       },
       {
         id: "neural-chat-7b-v3-1-awq",
@@ -757,7 +757,7 @@ async function getModels(env) {
       {
         id: "phi-2",
         provider: "Microsoft",
-        fullName: "@cf/Microsoft/phi-2"
+        fullName: "@cf/microsoft/phi-2"
       },
       {
         id: "qwen1.5-0.5b-chat",

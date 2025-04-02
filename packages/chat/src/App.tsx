@@ -62,11 +62,14 @@ const App: React.FC = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showTyping, setShowTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [models, setModels] = useState<{ id: string; provider: string; fullName: string }[]>([]);
   const [currentModel, setCurrentModel] = useState<string>('');
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const [userScrolled, setUserScrolled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
   
   // Initialize chat and load model
@@ -84,18 +87,6 @@ const App: React.FC = () => {
         // Get current model from API
         const model = await fetchCurrentModel();
         setCurrentModel(model);
-        
-        // Add welcome message if no messages
-        if (savedMessages.length === 0 && chatConfig.content.welcomeMessage) {
-          setTimeout(() => {
-            setMessages([{
-              id: 'welcome',
-              role: 'assistant',
-              content: chatConfig.content.welcomeMessage,
-              timestamp: Date.now()
-            }]);
-          }, chatConfig.behavior.initialMessageDelay);
-        }
       } catch (err) {
         console.error('Failed to initialize chat:', err);
       }
@@ -122,12 +113,56 @@ const App: React.FC = () => {
     };
   }, [modelDropdownOpen]);
   
-  // Scroll to bottom when messages change
+  // Detect user scroll
   useEffect(() => {
-    if (chatConfig.behavior.autoScroll) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const messagesContainer = messagesContainerRef.current;
+    if (!messagesContainer) return;
+    
+    const handleScroll = () => {
+      // Check if user has scrolled up (not at bottom)
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainer;
+      
+      // When close to bottom (within 20px), we consider user at bottom
+      // This prevents minor scroll differences from triggering userScrolled
+      const atBottom = scrollHeight - scrollTop - clientHeight < 20;
+      
+      // Only set userScrolled when it changes to avoid unnecessary rerenders
+      if (userScrolled === atBottom) {
+        setUserScrolled(!atBottom);
+      }
+    };
+    
+    messagesContainer.addEventListener('scroll', handleScroll);
+    return () => messagesContainer.removeEventListener('scroll', handleScroll);
+  }, [userScrolled]);
+  
+  // Scroll to bottom when new message arrives
+  useEffect(() => {
+    // Only auto-scroll if:
+    // 1. Auto-scroll is enabled in config
+    // 2. AND (user hasn't manually scrolled up OR a new message has been added)
+    const isNewMessage = messages.length > 0 && 
+      (messages[messages.length - 1].animationState === 'appearing');
+    
+    const shouldScroll = chatConfig.behavior.autoScroll && 
+      (!userScrolled || isNewMessage);
+    
+    if (shouldScroll && messagesEndRef.current) {
+      // Use a small timeout to ensure DOM is updated
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
     }
-  }, [messages]);
+  }, [messages, userScrolled]);
+  
+  // Reset user scroll flag when sending messages
+  const resetScroll = () => {
+    if (messagesContainerRef.current) {
+      const { scrollHeight, clientHeight } = messagesContainerRef.current;
+      messagesContainerRef.current.scrollTop = scrollHeight - clientHeight;
+      setUserScrolled(false);
+    }
+  };
   
   // Handle model change
   const handleModelChange = async (model: string) => {
@@ -179,32 +214,115 @@ const App: React.FC = () => {
     // Clear input immediately
     setInput('');
     
-    // Create and display user message immediately
+    // Create temporary user message to display immediately
     const userMessage: ChatMessage = {
       id: 'temp-' + Date.now(),
       role: 'user',
       content: messageText,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      animationState: 'appearing'
     };
     
     // Add user message to UI immediately
     setMessages(prevMessages => [...prevMessages, userMessage]);
     
+    // Reset scroll position to bottom
+    resetScroll();
+    
     // Then start loading state for assistant response
     setLoading(true);
     setError(null);
     
+    // Natural delay before showing typing indicator
+    const initialDelay = chatConfig.behavior.typingIndicatorDelay || 800;
+    
+    // Create a more natural typing pattern with random pauses
+    const simulateNaturalTyping = () => {
+      let totalThinkingTime = 0;
+      const minThinkingTime = 2000; // Minimum thinking time in ms
+      const maxThinkingTime = 4000; // Maximum thinking time in ms
+      const targetThinkingTime = Math.random() * (maxThinkingTime - minThinkingTime) + minThinkingTime;
+      
+      // Initial delay before showing typing indicator
+      setTimeout(() => {
+        setShowTyping(true);
+        
+        // Start the thinking simulation loop
+        const thinkingLoop = () => {
+          // Random pause time between 400-1200ms
+          const pauseTime = Math.random() * 800 + 400;
+          
+          // Only continue the simulation if total time is less than target
+          if (totalThinkingTime < targetThinkingTime) {
+            setTimeout(() => {
+              // 30% chance to hide the indicator during thinking
+              if (Math.random() < 0.3) {
+                setShowTyping(false);
+                
+                // Show it again after a short pause
+                setTimeout(() => {
+                  setShowTyping(true);
+                  totalThinkingTime += pauseTime;
+                  thinkingLoop();
+                }, pauseTime);
+              } else {
+                totalThinkingTime += pauseTime;
+                thinkingLoop();
+              }
+            }, pauseTime);
+          }
+        };
+        
+        thinkingLoop();
+      }, initialDelay);
+    };
+    
+    simulateNaturalTyping();
+    
     try {
       // Send to backend and get updated messages
       const updatedMessages = await chatService.sendMessage(messageText);
-      setMessages(updatedMessages);
+      
+      // Mark the latest message as appearing for animation
+      if (updatedMessages.length > 0) {
+        const lastMessage = updatedMessages[updatedMessages.length - 1];
+        if (lastMessage.role === 'assistant') {
+          lastMessage.animationState = 'appearing';
+        }
+      }
+      
+      // Short delay before showing the response (feels more natural)
+      setTimeout(() => {
+        setMessages(updatedMessages);
+        setLoading(false);
+        setShowTyping(false);
+        
+        // Reset scroll position to bottom for new assistant message
+        resetScroll();
+      }, 300);
     } catch (err) {
+      // We already added the user message, so we don't need to add it again
       setError(chatConfig.content.errorMessage);
       console.error('Error sending message:', err);
-    } finally {
       setLoading(false);
+      setShowTyping(false);
     }
   };
+  
+  // Handle animation end for messages
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setMessages(prevMessages => 
+        prevMessages.map(msg => 
+          msg.animationState === 'appearing' 
+            ? { ...msg, animationState: 'appeared' } 
+            : msg
+        )
+      );
+    }, 500);
+    
+    return () => clearTimeout(timeout);
+  }, [messages]);
   
   // Handle clearing conversation
   const handleClearConversation = async () => {
@@ -212,18 +330,6 @@ const App: React.FC = () => {
       await chatService.clearSession();
       setMessages([]);
       setError(null);
-      
-      // Add welcome message
-      if (chatConfig.content.welcomeMessage) {
-        setTimeout(() => {
-          setMessages([{
-            id: 'welcome',
-            role: 'assistant',
-            content: chatConfig.content.welcomeMessage,
-            timestamp: Date.now()
-          }]);
-        }, chatConfig.behavior.initialMessageDelay);
-      }
     } catch (err) {
       console.error('Failed to clear conversation:', err);
     }
@@ -267,11 +373,17 @@ const App: React.FC = () => {
       </div>
       
       <div className="salon-chat-container">
-        <div className="salon-messages">
+        <div className="salon-messages" ref={messagesContainerRef}>
           {messages.map((msg) => (
             <div 
               key={msg.id} 
-              className={`salon-message ${msg.role === 'user' ? 'user-message' : 'assistant-message'}`}
+              className={`salon-message ${msg.role === 'user' ? 'user-message' : 'assistant-message'} ${
+                msg.animationState === 'appearing' 
+                  ? msg.role === 'user' 
+                    ? 'user-message-appearing' 
+                    : 'assistant-message-appearing' 
+                  : ''
+              }`}
             >
               <div className="message-bubble">
                 <div className="message-content">
@@ -288,8 +400,8 @@ const App: React.FC = () => {
             </div>
           ))}
           
-          {loading && (
-            <div className="salon-message assistant-message">
+          {loading && showTyping && (
+            <div className="salon-message assistant-message loading-message-container">
               <div className="message-bubble loading-message">
                 <div className="typing-indicator">
                   <span></span>

@@ -6,6 +6,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: number;
+  animationState?: 'appearing' | 'appeared';
 }
 
 // Local storage key
@@ -137,13 +138,14 @@ export class CloudflareChatService {
       // Update session ID if new
       if (data.sessionId && (!this.sessionId || data.isNewSession)) {
         this.sessionId = data.sessionId;
+        this.saveSession();
       }
 
       // Create assistant message
       const assistantMessage: ChatMessage = {
         id: uuidv4(),
         role: 'assistant',
-        content: data.message,
+        content: data.message || "",
         timestamp: Date.now()
       };
 
@@ -188,7 +190,7 @@ export class CloudflareChatService {
         this.messages = data.messages.map((msg: any) => ({
           id: msg.id || uuidv4(),
           role: msg.role,
-          content: msg.content,
+          content: msg.content || "",
           timestamp: msg.timestamp || Date.now()
         }));
         this.saveSession();
