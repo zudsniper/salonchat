@@ -28,7 +28,8 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "react-markdown": "^10.1.0"
   },
   "devDependencies": {
     "wrangler": "^4.6.0"

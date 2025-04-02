@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createChatService, ChatMessage } from './services/cloudflare';
 import { apiUrl, chatConfig } from './config';
 import './styles.css';
+import ReactMarkdown from 'react-markdown';
 
 // Model data - use fetch from server or local static data
 const fetchModels = async () => {
   try {
-    // Try to fetch from server first
+    // Fetch from server
     const response = await fetch(`${apiUrl}/api/models`);
     if (response.ok) {
       const data = await response.json();
@@ -14,35 +15,45 @@ const fetchModels = async () => {
         return data.models;
       }
     }
-    
-    // Fallback to local models (fetch from the JSON file)
-    const modelsResponse = await fetch('/resources/models.json');
-    if (modelsResponse.ok) {
-      const modelsData = await modelsResponse.json();
-      return modelsData.models;
-    }
+    throw new Error('Failed to fetch models from server');
   } catch (error) {
     console.error('Error fetching models:', error);
+    // Default models if all else fails
+    return [
+      {
+        id: "deepseek-r1-distill-qwen-32b",
+        provider: "deepseek-ai",
+        fullName: "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+      },
+      {
+        id: "llama-3-8b-instruct",
+        provider: "Meta",
+        fullName: "@cf/Meta/llama-3-8b-instruct"
+      },
+      {
+        id: "mistral-7b-instruct-v0.2",
+        provider: "MistralAI",
+        fullName: "@cf/MistralAI/mistral-7b-instruct-v0.2"
+      }
+    ];
   }
-  
-  // Default models if all else fails
-  return [
-    {
-      id: "deepseek-r1-distill-qwen-32b",
-      provider: "deepseek-ai",
-      fullName: "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    },
-    {
-      id: "llama-3-8b-instruct",
-      provider: "Meta",
-      fullName: "@cf/Meta/llama-3-8b-instruct"
-    },
-    {
-      id: "mistral-7b-instruct-v0.2",
-      provider: "MistralAI",
-      fullName: "@cf/MistralAI/mistral-7b-instruct-v0.2"
+};
+
+// Fetch the current model directly from the API
+const fetchCurrentModel = async () => {
+  try {
+    const response = await fetch(`${apiUrl}/api/model`);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.model) {
+        return data.model;
+      }
     }
-  ];
+    throw new Error('Failed to fetch current model');
+  } catch (error) {
+    console.error('Error fetching current model:', error);
+    return '';
+  }
 };
 
 const chatService = createChatService(apiUrl);
@@ -70,8 +81,8 @@ const App: React.FC = () => {
         const savedMessages = await chatService.getHistory();
         setMessages(savedMessages);
         
-        // Get current model
-        const model = await chatService.getCurrentModel();
+        // Get current model from API
+        const model = await fetchCurrentModel();
         setCurrentModel(model);
         
         // Add welcome message if no messages
@@ -122,6 +133,21 @@ const App: React.FC = () => {
   const handleModelChange = async (model: string) => {
     try {
       setLoading(true);
+      
+      // Update the model via API
+      const response = await fetch(`${apiUrl}/api/model`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ model })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      // Update the local service
       await chatService.setModel(model);
       setCurrentModel(model);
       setModelDropdownOpen(false);
@@ -148,13 +174,30 @@ const App: React.FC = () => {
     
     if (!input.trim() || loading) return;
     
+    const messageText = input.trim();
+    
+    // Clear input immediately
+    setInput('');
+    
+    // Create and display user message immediately
+    const userMessage: ChatMessage = {
+      id: 'temp-' + Date.now(),
+      role: 'user',
+      content: messageText,
+      timestamp: Date.now()
+    };
+    
+    // Add user message to UI immediately
+    setMessages(prevMessages => [...prevMessages, userMessage]);
+    
+    // Then start loading state for assistant response
     setLoading(true);
     setError(null);
     
     try {
-      const updatedMessages = await chatService.sendMessage(input);
+      // Send to backend and get updated messages
+      const updatedMessages = await chatService.sendMessage(messageText);
       setMessages(updatedMessages);
-      setInput('');
     } catch (err) {
       setError(chatConfig.content.errorMessage);
       console.error('Error sending message:', err);
@@ -231,7 +274,13 @@ const App: React.FC = () => {
               className={`salon-message ${msg.role === 'user' ? 'user-message' : 'assistant-message'}`}
             >
               <div className="message-bubble">
-                <div className="message-content">{msg.content}</div>
+                <div className="message-content">
+                  {msg.role === 'user' ? (
+                    msg.content
+                  ) : (
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  )}
+                </div>
                 <div className="message-time">
                   {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
@@ -274,9 +323,9 @@ const App: React.FC = () => {
             type="submit" 
             disabled={loading || !input.trim()} 
             className="salon-send-button"
-            aria-label={loading ? chatConfig.content.loadingLabel : chatConfig.content.sendButtonLabel}
+            aria-label={chatConfig.content.sendButtonLabel}
           >
-            {loading ? chatConfig.content.loadingLabel : chatConfig.content.sendButtonLabel}
+            {chatConfig.content.sendButtonLabel}
           </button>
         </form>
       </div>
