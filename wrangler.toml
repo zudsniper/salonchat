@@ -25,3 +25,10 @@ head_sampling_rate = 1
 # Optionally configure environment variables
 [vars]
 # OPENAI_API_KEY = "" # Uncomment to use OpenAI instead of Workers AI
+# AI generation parameters
+MAX_TOKENS = 500
+TEMPERATURE = 0.7
+TOP_P = 0.9
+TOP_K = 40
+FREQUENCY_PENALTY = 0.0
+PRESENCE_PENALTY = 0.0

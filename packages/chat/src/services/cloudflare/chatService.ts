@@ -26,6 +26,12 @@ export class CloudflareChatService {
     this.apiUrl = apiUrl;
     this.loadSession();
     this.loadModel();
+    
+    // Ensure we always have a sessionId
+    if (!this.sessionId) {
+      this.sessionId = uuidv4();
+      this.saveSession();
+    }
   }
 
   /**
@@ -107,6 +113,13 @@ export class CloudflareChatService {
     this.saveSession();
 
     try {
+      // Ensure we have a sessionId before sending the request
+      if (!this.sessionId) {
+        console.warn('No sessionId found, generating a new one');
+        this.sessionId = uuidv4();
+        this.saveSession();
+      }
+      
       // Create request payload
       const payload: any = {
         message: content.trim(),
@@ -223,6 +236,10 @@ export class CloudflareChatService {
 
     // Clear local data
     this.messages = [];
+    
+    // Generate a new session ID
+    this.sessionId = uuidv4();
+    
     this.saveSession();
   }
 

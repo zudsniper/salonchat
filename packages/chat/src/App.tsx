@@ -126,7 +126,7 @@ const App: React.FC = () => {
       // This prevents minor scroll differences from triggering userScrolled
       const atBottom = scrollHeight - scrollTop - clientHeight < 20;
       
-      // Only set userScrolled when it changes to avoid unnecessary rerenders
+      // Only update the state if it's changing to avoid unnecessary rerenders
       if (userScrolled === atBottom) {
         setUserScrolled(!atBottom);
       }
@@ -136,31 +136,25 @@ const App: React.FC = () => {
     return () => messagesContainer.removeEventListener('scroll', handleScroll);
   }, [userScrolled]);
   
-  // Scroll to bottom when new message arrives
+  // Scroll to bottom ONLY when new message arrives
   useEffect(() => {
-    // Only auto-scroll if:
-    // 1. Auto-scroll is enabled in config
-    // 2. AND (user hasn't manually scrolled up OR a new message has been added)
+    // Only scroll if a new message has been added
     const isNewMessage = messages.length > 0 && 
       (messages[messages.length - 1].animationState === 'appearing');
     
-    const shouldScroll = chatConfig.behavior.autoScroll && 
-      (!userScrolled || isNewMessage);
-    
-    if (shouldScroll && messagesEndRef.current) {
+    if (isNewMessage && messagesEndRef.current && chatConfig.behavior.autoScroll) {
       // Use a small timeout to ensure DOM is updated
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     }
-  }, [messages, userScrolled]);
+  }, [messages]);
   
   // Reset user scroll flag when sending messages
   const resetScroll = () => {
     if (messagesContainerRef.current) {
       const { scrollHeight, clientHeight } = messagesContainerRef.current;
       messagesContainerRef.current.scrollTop = scrollHeight - clientHeight;
-      setUserScrolled(false);
     }
   };
   

@@ -151,7 +151,16 @@ async function handleChatMessage(request, env, ctx) {
       });
     }
     
-    const { message, sessionId = crypto.randomUUID(), model } = requestData;
+    // Extract sessionId with fallback to ensure it's never null/undefined
+    let { message, sessionId, model } = requestData;
+    
+    // If sessionId is null, undefined, or an empty string, generate a new one
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      console.log(`Generated new sessionId: ${sessionId} (client sent: ${requestData.sessionId || 'null/undefined'})`);
+    }
+    
+    console.log(`Processing message for session ${sessionId}:`, message && message.substring(0, 50) + (message && message.length > 50 ? '...' : ''));
     
     if (!message || typeof message !== "string") {
       return new Response(JSON.stringify({ error: "Message is required" }), {
@@ -159,6 +168,9 @@ async function handleChatMessage(request, env, ctx) {
         headers: { "Content-Type": "application/json" }
       });
     }
+    
+    // Ensure the chat_sessions table exists
+    await ensureChatSessionsTable(env);
     
     // Get chat history
     let chatHistory = [];
@@ -168,7 +180,23 @@ async function handleChatMessage(request, env, ctx) {
       ).bind(sessionId).first();
       
       if (historyResult?.messages) {
-        chatHistory = JSON.parse(historyResult.messages);
+        try {
+          chatHistory = JSON.parse(historyResult.messages);
+          console.log(`Retrieved chat history for session ${sessionId}, found ${chatHistory.length} messages`);
+          // Log first few messages to help with debugging
+          if (chatHistory.length > 0) {
+            console.log("Sample of chat history:");
+            chatHistory.slice(Math.max(0, chatHistory.length - 2)).forEach((msg, i) => {
+              console.log(`[${i}] ${msg.role}: ${msg.content.substring(0, 30)}...`);
+            });
+          }
+        } catch (parseError) {
+          console.error("Error parsing chat history JSON:", parseError);
+          // Reset chat history if parsing fails
+          chatHistory = [];
+        }
+      } else {
+        console.log(`No existing chat history found for session ${sessionId}`);
       }
     } catch (error) {
       console.error("Error retrieving chat history:", error);
@@ -177,15 +205,19 @@ async function handleChatMessage(request, env, ctx) {
     
     // Add user message to history
     chatHistory.push({ role: "user", content: message });
+    console.log(`Added user message to history. History now has ${chatHistory.length} messages`);
     
     // Generate embeddings for user query and search vector database
     const relevantServices = await searchRelevantServices(message, env);
+    console.log(`Found ${relevantServices.length} relevant services`);
     
     // Construct prompt with context and generate response
     const aiResponse = await generateAIResponse(message, relevantServices, chatHistory, env, model);
+    console.log("Generated AI response:", aiResponse.substring(0, 50) + (aiResponse.length > 50 ? '...' : ''));
     
     // Add AI response to history
     chatHistory.push({ role: "assistant", content: aiResponse });
+    console.log(`Added AI response to history. Final history has ${chatHistory.length} messages`);
     
     // Update or create chat session in database
     const timestamp = Math.floor(Date.now() / 1000);
@@ -202,13 +234,18 @@ async function handleChatMessage(request, env, ctx) {
         timestamp,
         timestamp
       ).run();
+      console.log(`Successfully saved chat history to database for session ${sessionId}`);
     } catch (dbError) {
-      console.error("Database error:", dbError);
+      console.error("Database error when saving chat history:", dbError);
       // Continue even if database update fails
     }
     
+    // Check if this is a new session ID (different from what client sent)
+    const isNewSession = sessionId !== requestData.sessionId;
+    
     const responseData = {
       sessionId,
+      isNewSession,
       message: aiResponse
     };
     
@@ -236,20 +273,50 @@ async function handleChatMessage(request, env, ctx) {
  */
 async function getChatHistory(sessionId, env) {
   try {
+    console.log(`Retrieving chat history for session ${sessionId}`);
+    
+    // Ensure the chat_sessions table exists
+    await ensureChatSessionsTable(env);
+    
     const result = await env.SALON_DB.prepare(
       "SELECT messages FROM chat_sessions WHERE id = ?"
     ).bind(sessionId).first();
     
     if (!result?.messages) {
+      console.log(`No chat history found for session ${sessionId}`);
       return new Response(JSON.stringify({ error: "Chat session not found" }), {
         status: 404,
         headers: { "Content-Type": "application/json" }
       });
     }
     
+    let messages;
+    try {
+      messages = JSON.parse(result.messages);
+      console.log(`Successfully retrieved chat history with ${messages.length} messages for session ${sessionId}`);
+      
+      // Log a sample of messages to help with debugging
+      if (messages.length > 0) {
+        console.log("Sample of chat history:");
+        const sampleSize = Math.min(messages.length, 3);
+        messages.slice(messages.length - sampleSize).forEach((msg, i) => {
+          console.log(`[${messages.length - sampleSize + i}] ${msg.role}: ${msg.content.substring(0, 30)}...`);
+        });
+      }
+    } catch (parseError) {
+      console.error("Error parsing messages JSON:", parseError);
+      return new Response(JSON.stringify({ 
+        error: "Invalid chat history format",
+        details: parseError.message
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    
     return new Response(JSON.stringify({
       sessionId,
-      messages: JSON.parse(result.messages)
+      messages
     }), {
       headers: { "Content-Type": "application/json" }
     });
@@ -267,6 +334,9 @@ async function getChatHistory(sessionId, env) {
  */
 async function clearChatSession(sessionId, env) {
   try {
+    // Ensure the chat_sessions table exists
+    await ensureChatSessionsTable(env);
+    
     await env.SALON_DB.prepare(
       "DELETE FROM chat_sessions WHERE id = ?"
     ).bind(sessionId).run();
@@ -398,7 +468,7 @@ async function generateAIResponse(message, services, history, env, model) {
       services.forEach(service => {
         contextText += `Service: ${service.name}\n`;
         contextText += `Category: ${service.category}\n`;
-        contextText += `Price: ${service.price_from}\n`;
+        contextText += `Price: ${service.price_from || service.price}\n`;
         contextText += `Description: ${service.description}\n`;
         
         // Add detailed service information if available
@@ -494,6 +564,18 @@ ${contextText}`;
       }
     }
     
+    // Get AI parameters from environment variables or use defaults
+    const aiParams = {
+      max_tokens: Number(env.MAX_TOKENS) || 500,
+      temperature: Number(env.TEMPERATURE) || 0.7,
+      top_p: Number(env.TOP_P) || 0.9,
+      top_k: Number(env.TOP_K) || 40,
+      frequency_penalty: Number(env.FREQUENCY_PENALTY) || 0.0,
+      presence_penalty: Number(env.PRESENCE_PENALTY) || 0.0
+    };
+
+    console.log("Using AI parameters:", JSON.stringify(aiParams));
+    
     // Check if using Workers AI or OpenAI
     if (env.OPENAI_API_KEY) {
       try {
@@ -507,8 +589,11 @@ ${contextText}`;
           body: JSON.stringify({
             model: "gpt-3.5-turbo",
             messages: messages,
-            temperature: 0.7,
-            max_tokens: 500
+            temperature: aiParams.temperature,
+            max_tokens: aiParams.max_tokens,
+            top_p: aiParams.top_p,
+            frequency_penalty: aiParams.frequency_penalty,
+            presence_penalty: aiParams.presence_penalty
           })
         });
         
@@ -533,7 +618,26 @@ ${contextText}`;
       try {
         // Use Workers AI for inference with the current model
         console.log(`Using model: ${currentModel}`);
-        const response = await env.AI.run(currentModel, { messages });
+        
+        // Add AI parameters to the request
+        const aiRequest = { 
+          messages,
+          max_tokens: aiParams.max_tokens,
+          temperature: aiParams.temperature,
+          top_p: aiParams.top_p,
+          top_k: aiParams.top_k
+        };
+        
+        // Add frequency/presence penalties if the model supports them
+        if (aiParams.frequency_penalty > 0) {
+          aiRequest.frequency_penalty = aiParams.frequency_penalty;
+        }
+        
+        if (aiParams.presence_penalty > 0) {
+          aiRequest.presence_penalty = aiParams.presence_penalty;
+        }
+        
+        const response = await env.AI.run(currentModel, aiRequest);
         aiResponse = response.response;
       } catch (aiError) {
         console.error(`Error with model ${currentModel}:`, aiError);
@@ -542,7 +646,13 @@ ${contextText}`;
         if (currentModel !== DEFAULT_MODEL) {
           try {
             console.log(`Falling back to default model: ${DEFAULT_MODEL}`);
-            const response = await env.AI.run(DEFAULT_MODEL, { messages });
+            const response = await env.AI.run(DEFAULT_MODEL, { 
+              messages,
+              max_tokens: aiParams.max_tokens,
+              temperature: aiParams.temperature,
+              top_p: aiParams.top_p,
+              top_k: aiParams.top_k
+            });
             aiResponse = response.response;
           } catch (fallbackError) {
             console.error("Default model fallback error:", fallbackError);
@@ -906,5 +1016,30 @@ async function ensureSettingsTable(env) {
     `).run();
   } catch (error) {
     console.error("Error creating settings table:", error);
+  }
+}
+
+/**
+ * Ensure chat_sessions table exists
+ */
+async function ensureChatSessionsTable(env) {
+  try {
+    await env.SALON_DB.prepare(`
+      CREATE TABLE IF NOT EXISTS chat_sessions (
+        id TEXT PRIMARY KEY,
+        messages TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    `).run();
+    
+    // Create an index for faster lookups by session ID
+    await env.SALON_DB.prepare(`
+      CREATE INDEX IF NOT EXISTS idx_chat_sessions_id ON chat_sessions (id)
+    `).run();
+    
+    console.log("Ensured chat_sessions table and indexes exist");
+  } catch (error) {
+    console.error("Error ensuring chat_sessions table:", error);
   }
 }
