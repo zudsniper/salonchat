@@ -17,6 +17,11 @@ binding = "AI"
 binding = "SALON_VECTORIZE"
 index_name = "salon-vectorize"
 
+# logging
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 # Optionally configure environment variables
 [vars]
 # OPENAI_API_KEY = "" # Uncomment to use OpenAI instead of Workers AI

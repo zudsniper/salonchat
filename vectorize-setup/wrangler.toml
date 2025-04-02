@@ -12,6 +12,10 @@ database_id = "f2445643-edc0-4dc9-85d2-d094290dcfa6"
 [ai]
 binding = "AI"
 
+[observability]
+enabled = true
+head_sampling_rate = 1 # optional. default = 1.
+
 # Create binding for the vector index
 [[vectorize]]
 binding = "SALON_VECTORIZE"

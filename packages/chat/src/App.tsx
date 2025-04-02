@@ -3,6 +3,48 @@ import { createChatService, ChatMessage } from './services/cloudflare';
 import { apiUrl, chatConfig } from './config';
 import './styles.css';
 
+// Model data - use fetch from server or local static data
+const fetchModels = async () => {
+  try {
+    // Try to fetch from server first
+    const response = await fetch(`${apiUrl}/api/models`);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.models && Array.isArray(data.models)) {
+        return data.models;
+      }
+    }
+    
+    // Fallback to local models (fetch from the JSON file)
+    const modelsResponse = await fetch('/resources/models.json');
+    if (modelsResponse.ok) {
+      const modelsData = await modelsResponse.json();
+      return modelsData.models;
+    }
+  } catch (error) {
+    console.error('Error fetching models:', error);
+  }
+  
+  // Default models if all else fails
+  return [
+    {
+      id: "deepseek-r1-distill-qwen-32b",
+      provider: "deepseek-ai",
+      fullName: "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    },
+    {
+      id: "llama-3-8b-instruct",
+      provider: "Meta",
+      fullName: "@cf/Meta/llama-3-8b-instruct"
+    },
+    {
+      id: "mistral-7b-instruct-v0.2",
+      provider: "MistralAI",
+      fullName: "@cf/MistralAI/mistral-7b-instruct-v0.2"
+    }
+  ];
+};
+
 const chatService = createChatService(apiUrl);
 
 const App: React.FC = () => {
@@ -10,15 +52,27 @@ const App: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [models, setModels] = useState<{ id: string; provider: string; fullName: string }[]>([]);
+  const [currentModel, setCurrentModel] = useState<string>('');
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const modelDropdownRef = useRef<HTMLDivElement>(null);
   
-  // Initialize chat
+  // Initialize chat and load model
   useEffect(() => {
     const initChat = async () => {
       try {
+        // Load models
+        const modelsList = await fetchModels();
+        setModels(modelsList);
+        
         // Load saved messages
         const savedMessages = await chatService.getHistory();
         setMessages(savedMessages);
+        
+        // Get current model
+        const model = await chatService.getCurrentModel();
+        setCurrentModel(model);
         
         // Add welcome message if no messages
         if (savedMessages.length === 0 && chatConfig.content.welcomeMessage) {
@@ -39,12 +93,54 @@ const App: React.FC = () => {
     initChat();
   }, []);
   
+  // Handle clicks outside the model dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        modelDropdownRef.current && 
+        !modelDropdownRef.current.contains(event.target as Node) && 
+        modelDropdownOpen
+      ) {
+        setModelDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [modelDropdownOpen]);
+  
   // Scroll to bottom when messages change
   useEffect(() => {
     if (chatConfig.behavior.autoScroll) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+  
+  // Handle model change
+  const handleModelChange = async (model: string) => {
+    try {
+      setLoading(true);
+      await chatService.setModel(model);
+      setCurrentModel(model);
+      setModelDropdownOpen(false);
+    } catch (err) {
+      console.error('Failed to change model:', err);
+      setError('Failed to change model. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Get display name for model
+  const getModelDisplayName = (fullName: string) => {
+    const model = models.find(m => m.fullName === fullName);
+    if (model) {
+      return `${model.id} (${model.provider})`;
+    }
+    return fullName.replace('@cf/', '');
+  };
   
   // Handle message submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,13 +190,37 @@ const App: React.FC = () => {
     <div className="salon-app-container">
       <div className="salon-header">
         <h1>{chatConfig.content.headerTitle}</h1>
-        <button 
-          className="clear-button" 
-          onClick={handleClearConversation}
-          aria-label={chatConfig.content.clearButtonLabel}
-        >
-          {chatConfig.content.clearButtonLabel}
-        </button>
+        <div className="salon-header-controls">
+          <div className="model-selector" ref={modelDropdownRef}>
+            <button 
+              className="model-selector-button" 
+              onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
+              disabled={loading}
+            >
+              {currentModel ? getModelDisplayName(currentModel) : 'Select Model'}
+            </button>
+            {modelDropdownOpen && (
+              <div className="model-dropdown">
+                {models.map((model) => (
+                  <div 
+                    key={model.id} 
+                    className={`model-option ${currentModel === model.fullName ? 'selected' : ''}`}
+                    onClick={() => handleModelChange(model.fullName)}
+                  >
+                    {model.id} ({model.provider})
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <button 
+            className="clear-button" 
+            onClick={handleClearConversation}
+            aria-label={chatConfig.content.clearButtonLabel}
+          >
+            {chatConfig.content.clearButtonLabel}
+          </button>
+        </div>
       </div>
       
       <div className="salon-chat-container">

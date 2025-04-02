@@ -1,0 +1,229 @@
+{
+  "models": [
+    {
+      "id": "deepseek-coder-6.7b-base-awq",
+      "provider": "thebloke",
+      "fullName": "@cf/thebloke/deepseek-coder-6.7b-base-awq"
+    },
+    {
+      "id": "deepseek-coder-6.7b-instruct-awq",
+      "provider": "thebloke",
+      "fullName": "@cf/thebloke/deepseek-coder-6.7b-instruct-awq"
+    },
+    {
+      "id": "deepseek-math-7b-instruct",
+      "provider": "deepseek-ai",
+      "fullName": "@cf/deepseek-ai/deepseek-math-7b-instruct"
+    },
+    {
+      "id": "deepseek-r1-distill-qwen-32b",
+      "provider": "deepseek-ai",
+      "fullName": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    },
+    {
+      "id": "discolm-german-7b-v1-awq",
+      "provider": "thebloke",
+      "fullName": "@cf/thebloke/discolm-german-7b-v1-awq"
+    },
+    {
+      "id": "falcon-7b-instruct",
+      "provider": "tiiuae",
+      "fullName": "@cf/tiiuae/falcon-7b-instruct"
+    },
+    {
+      "id": "gemma-2b-it-lora",
+      "provider": "Google",
+      "fullName": "@cf/Google/gemma-2b-it-lora"
+    },
+    {
+      "id": "gemma-7b-it-lora",
+      "provider": "Google",
+      "fullName": "@hf/Google/gemma-7b-it-lora"
+    },
+    {
+      "id": "gemma-7b-it",
+      "provider": "Google",
+      "fullName": "@cf/Google/gemma-7b-it"
+    },
+    {
+      "id": "hermes-2-pro-mistral-7b",
+      "provider": "nousresearch",
+      "fullName": "@cf/nousresearch/hermes-2-pro-mistral-7b"
+    },
+    {
+      "id": "llama-2-13b-chat-awq",
+      "provider": "thebloke",
+      "fullName": "@cf/thebloke/llama-2-13b-chat-awq"
+    },
+    {
+      "id": "llama-2-7b-chat-hf-lora",
+      "provider": "meta-llama",
+      "fullName": "@cf/meta-llama/llama-2-7b-chat-hf-lora"
+    },
+    {
+      "id": "llama-2-7b-chat-fp16",
+      "provider": "Meta",
+      "fullName": "@cf/Meta/llama-2-7b-chat-fp16"
+    },
+    {
+      "id": "llama-2-7b-chat-int8",
+      "provider": "Meta",
+      "fullName": "@cf/Meta/llama-2-7b-chat-int8"
+    },
+    {
+      "id": "llama-3-8b-instruct-awq",
+      "provider": "Meta",
+      "fullName": "@cf/Meta/llama-3-8b-instruct-awq"
+    },
+    {
+      "id": "llama-3-8b-instruct",
+      "provider": "Meta",
+      "fullName": "@cf/Meta/llama-3-8b-instruct"
+    },
+    {
+      "id": "llama-3.1-70b-instruct",
+      "provider": "Meta",
+      "fullName": "@cf/Meta/llama-3.1-70b-instruct"
+    },
+    {
+      "id": "llama-3.1-8b-instruct-awq",
+      "provider": "Meta",
+      "fullName": "@cf/Meta/llama-3.1-8b-instruct-awq"
+    },
+    {
+      "id": "llama-3.1-8b-instruct-fp8",
+      "provider": "Meta",
+      "fullName": "@cf/Meta/llama-3.1-8b-instruct-fp8"
+    },
+    {
+      "id": "llama-3.1-8b-instruct-fast",
+      "provider": "Meta",
+      "fullName": "@cf/Meta/llama-3.1-8b-instruct-fast"
+    },
+    {
+      "id": "llama-3.1-8b-instruct",
+      "provider": "Meta",
+      "fullName": "@cf/Meta/llama-3.1-8b-instruct"
+    },
+    {
+      "id": "llama-3.2-11b-vision-instruct",
+      "provider": "Meta",
+      "fullName": "@cf/Meta/llama-3.2-11b-vision-instruct"
+    },
+    {
+      "id": "llama-3.2-1b-instruct",
+      "provider": "Meta",
+      "fullName": "@cf/Meta/llama-3.2-1b-instruct"
+    },
+    {
+      "id": "llama-3.2-3b-instruct",
+      "provider": "Meta",
+      "fullName": "@cf/Meta/llama-3.2-3b-instruct"
+    },
+    {
+      "id": "llama-3.3-70b-instruct-fp8-fast",
+      "provider": "Meta",
+      "fullName": "@cf/Meta/llama-3.3-70b-instruct-fp8-fast"
+    },
+    {
+      "id": "llama-guard-3-8b",
+      "provider": "Meta",
+      "fullName": "@cf/Meta/llama-guard-3-8b"
+    },
+    {
+      "id": "llamaguard-7b-awq",
+      "provider": "thebloke",
+      "fullName": "@cf/thebloke/llamaguard-7b-awq"
+    },
+    {
+      "id": "meta-llama-3-8b-instruct",
+      "provider": "meta-llama",
+      "fullName": "@cf/meta-llama/meta-llama-3-8b-instruct"
+    },
+    {
+      "id": "mistral-7b-instruct-v0.1-awq",
+      "provider": "thebloke",
+      "fullName": "@cf/thebloke/mistral-7b-instruct-v0.1-awq"
+    },
+    {
+      "id": "mistral-7b-instruct-v0.1",
+      "provider": "MistralAI",
+      "fullName": "@cf/MistralAI/mistral-7b-instruct-v0.1"
+    },
+    {
+      "id": "mistral-7b-instruct-v0.2-lora",
+      "provider": "MistralAI",
+      "fullName": "@cf/MistralAI/mistral-7b-instruct-v0.2-lora"
+    },
+    {
+      "id": "mistral-7b-instruct-v0.2",
+      "provider": "MistralAI",
+      "fullName": "@cf/MistralAI/mistral-7b-instruct-v0.2"
+    },
+    {
+      "id": "neural-chat-7b-v3-1-awq",
+      "provider": "thebloke",
+      "fullName": "@cf/thebloke/neural-chat-7b-v3-1-awq"
+    },
+    {
+      "id": "openchat-3.5-0106",
+      "provider": "openchat",
+      "fullName": "@cf/openchat/openchat-3.5-0106"
+    },
+    {
+      "id": "openhermes-2.5-mistral-7b-awq",
+      "provider": "thebloke",
+      "fullName": "@cf/thebloke/openhermes-2.5-mistral-7b-awq"
+    },
+    {
+      "id": "phi-2",
+      "provider": "Microsoft",
+      "fullName": "@cf/Microsoft/phi-2"
+    },
+    {
+      "id": "qwen1.5-0.5b-chat",
+      "provider": "qwen",
+      "fullName": "@cf/qwen/qwen1.5-0.5b-chat"
+    },
+    {
+      "id": "qwen1.5-1.8b-chat",
+      "provider": "qwen",
+      "fullName": "@cf/qwen/qwen1.5-1.8b-chat"
+    },
+    {
+      "id": "qwen1.5-14b-chat-awq",
+      "provider": "qwen",
+      "fullName": "@cf/qwen/qwen1.5-14b-chat-awq"
+    },
+    {
+      "id": "qwen1.5-7b-chat-awq",
+      "provider": "qwen",
+      "fullName": "@cf/qwen/qwen1.5-7b-chat-awq"
+    },
+    {
+      "id": "sqlcoder-7b-2",
+      "provider": "defog",
+      "fullName": "@cf/defog/sqlcoder-7b-2"
+    },
+    {
+      "id": "starling-lm-7b-beta",
+      "provider": "nexusflow",
+      "fullName": "@cf/nexusflow/starling-lm-7b-beta"
+    },
+    {
+      "id": "tinyllama-1.1b-chat-v1.0",
+      "provider": "tinyllama",
+      "fullName": "@cf/tinyllama/tinyllama-1.1b-chat-v1.0"
+    },
+    {
+      "id": "una-cybertron-7b-v2-bf16",
+      "provider": "fblgit",
+      "fullName": "@cf/fblgit/una-cybertron-7b-v2-bf16"
+    },
+    {
+      "id": "zephyr-7b-beta-awq",
+      "provider": "thebloke",
+      "fullName": "@cf/thebloke/zephyr-7b-beta-awq"
+    }
+  ]
+} 

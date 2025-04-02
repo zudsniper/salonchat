@@ -1,6 +1,6 @@
 {
   "name": "salonchat",
-  "version": "1.0.0",
+  "version": "2.2.2",
   "description": "AI chatbot for Apotheca salon using Cloudflare serverless and RAG",
   "workspaces": [
     "packages/*"

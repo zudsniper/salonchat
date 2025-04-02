@@ -1,0 +1,66 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "SalonService",
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "The name of the service offered"
+      },
+      "price_from": {
+        "type": "number",
+        "description": "Base price of the service in USD"
+      },
+      "category": {
+        "type": "string",
+        "description": "Category of the service, e.g., Hair Styling, Haircuts, Hair Color, Treatments, etc."
+      },
+      "description": {
+        "type": "string",
+        "description": "Detailed description of the service"
+      },
+      "details": {
+        "type": "object",
+        "description": "Additional information or variants for the service",
+        "properties": {
+          "unit": {
+            "type": "string",
+            "description": "Unit of time if the service is charged hourly (e.g., 'hour')"
+          },
+          "optional_addons": {
+            "type": "array",
+            "description": "Optional add-on services or upgrades",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "price": { "type": "number" },
+                "description": { "type": "string" }
+              },
+              "required": ["name", "price"]
+            }
+          },
+          "with_new_growth": {
+            "type": "number",
+            "description": "Price when including new growth service"
+          },
+          "not_for": {
+            "type": "array",
+            "description": "List of excluded scenarios or conditions where the service is not applicable",
+            "items": {
+              "type": "string"
+            }
+          },
+          "treatment_options": {
+            "type": "array",
+            "description": "Options available under a treatment service",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "required": ["name", "price_from", "category", "description", "details"]
+  }

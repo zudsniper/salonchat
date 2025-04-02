@@ -4,7 +4,7 @@ const path = require('path');
 const { parseSalonServices } = require('./src/parse-data');
 
 // URL of the deployed worker
-const WORKER_URL = 'https://salon-vectorize-setup.your-account.workers.dev';
+const WORKER_URL = 'https://salon-vectorize-setup.me-810.workers.dev';
 
 async function main() {
   try {

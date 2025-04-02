@@ -10,6 +10,7 @@ export interface ChatMessage {
 
 // Local storage key
 const STORAGE_KEY = 'salon-chat-session';
+const MODEL_STORAGE_KEY = 'salon-chat-model';
 
 /**
  * CloudflareChatService - Handles communication with Cloudflare Worker backend
@@ -18,10 +19,12 @@ export class CloudflareChatService {
   private apiUrl: string;
   private sessionId: string | null = null;
   private messages: ChatMessage[] = [];
+  private currentModel: string | null = null;
 
   constructor(apiUrl: string) {
     this.apiUrl = apiUrl;
     this.loadSession();
+    this.loadModel();
   }
 
   /**
@@ -42,6 +45,33 @@ export class CloudflareChatService {
   }
 
   /**
+   * Load current model from localStorage
+   */
+  private loadModel(): void {
+    try {
+      const model = localStorage.getItem(MODEL_STORAGE_KEY);
+      if (model) {
+        this.currentModel = model;
+      }
+    } catch (error) {
+      console.error('Failed to load model setting:', error);
+    }
+  }
+
+  /**
+   * Save current model to localStorage
+   */
+  private saveModel(): void {
+    try {
+      if (this.currentModel) {
+        localStorage.setItem(MODEL_STORAGE_KEY, this.currentModel);
+      }
+    } catch (error) {
+      console.error('Failed to save model setting:', error);
+    }
+  }
+
+  /**
    * Save current session to localStorage
    */
   private saveSession(): void {
@@ -58,7 +88,7 @@ export class CloudflareChatService {
   /**
    * Send message to backend and process response
    */
-  async sendMessage(content: string): Promise<ChatMessage[]> {
+  async sendMessage(content: string, model?: string): Promise<ChatMessage[]> {
     if (!content.trim()) {
       throw new Error('Message cannot be empty');
     }
@@ -76,16 +106,26 @@ export class CloudflareChatService {
     this.saveSession();
 
     try {
+      // Create request payload
+      const payload: any = {
+        message: content.trim(),
+        sessionId: this.sessionId
+      };
+
+      // Use model from parameter, current model, or let server decide
+      if (model) {
+        payload.model = model;
+      } else if (this.currentModel) {
+        payload.model = this.currentModel;
+      }
+
       // Call backend API
       const response = await fetch(`${this.apiUrl}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          message: content.trim(),
-          sessionId: this.sessionId
-        })
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
@@ -189,6 +229,87 @@ export class CloudflareChatService {
    */
   getMessages(): ChatMessage[] {
     return [...this.messages];
+  }
+
+  /**
+   * Get available models
+   */
+  async getModels(): Promise<string[]> {
+    try {
+      const response = await fetch(`${this.apiUrl}/api/models`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.models || [];
+    } catch (error) {
+      console.error('Error getting models:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get current model
+   */
+  async getCurrentModel(): Promise<string> {
+    try {
+      // Return cached model if available
+      if (this.currentModel) {
+        return this.currentModel;
+      }
+
+      const response = await fetch(`${this.apiUrl}/api/model`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      this.currentModel = data.model;
+      this.saveModel();
+      return data.model;
+    } catch (error) {
+      console.error('Error getting current model:', error);
+      return '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b'; // Default model
+    }
+  }
+
+  /**
+   * Set active model
+   */
+  async setModel(model: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.apiUrl}/api/model`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ model })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      // Update local model cache
+      this.currentModel = model;
+      this.saveModel();
+    } catch (error) {
+      console.error('Error setting model:', error);
+      throw error;
+    }
   }
 }
 
