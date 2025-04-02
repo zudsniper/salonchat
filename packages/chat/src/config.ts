@@ -1,7 +1,15 @@
 // Chat configuration
 
+interface ImportMetaEnv {
+  VITE_API_URL?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
 // API URL for the backend
-export const apiUrl = process.env.VITE_API_URL || 'https://salon-chat-backend.your-account.workers.dev';
+export const apiUrl = import.meta.env.VITE_API_URL || 'https://salon-chat-backend.me-810.workers.dev';
 
 // Default system prompt
 export const defaultSystemPrompt = 'You are an expert hairstylist AI chatbot for Apotheca salon. You help clients determine what hair services they need.';
