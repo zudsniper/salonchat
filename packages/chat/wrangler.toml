@@ -30,7 +30,4 @@ head_sampling_rate = 1
 API_WORKER_URL = "https://salonchat-api.zodworks.dev"
 PAGES_URL = "https://salonchat-frontend.pages.dev"
 
-# Service tokens - replace with actual values
-SERVICE_TOKEN_CLIENT_ID = "69a4458c2f6ba25ed8c6bb05bfc26bd1.access"
-SERVICE_TOKEN_CLIENT_SECRET = "62edf4cc29ffe98457a75371f6575e394a725a680e6a8a3bf4f766620623d326"
 
