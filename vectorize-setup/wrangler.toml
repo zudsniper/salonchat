@@ -2,6 +2,14 @@ name = "salon-vectorize-setup"
 main = "src/index.js"
 compatibility_date = "2025-04-01"
 
+# Configure custom domain
+routes = [
+  { pattern = "vectorized-salonchat.zodworks.dev", custom_domain = true }
+]
+
+# Disable workers.dev domain
+workers_dev = false
+
 # Bind the salon database
 [[d1_databases]]
 binding = "SALON_DB"

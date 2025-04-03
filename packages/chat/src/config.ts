@@ -8,8 +8,9 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-// API URL for the backend
-export const apiUrl = import.meta.env.VITE_API_URL || 'https://salon-chat-backend.me-810.workers.dev';
+// API URL for the backend 
+// Using relative URL ensures requests go through the Cloudflare Worker
+export const apiUrl = import.meta.env.VITE_API_URL || '';
 
 // Default system prompt
 export const defaultSystemPrompt = `You are an expert hairstylist AI chatbot integrated onto Apotheca Salon's website.

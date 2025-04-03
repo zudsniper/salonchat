@@ -4,7 +4,7 @@ const path = require('path');
 const { parseServices } = require('./src/parseFullServices');
 
 // Constants
-const WORKER_URL = process.env.WORKER_URL || 'https://salon-vectorize-setup.me-810.workers.dev';
+const WORKER_URL = process.env.WORKER_URL || 'https://vectorized-salonchat.zodworks.dev';
 const SERVICES_DATA_PATH = path.join(__dirname, '../resources/services.json');
 
 /**

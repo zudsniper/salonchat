@@ -13,6 +13,10 @@ export interface ChatMessage {
 const STORAGE_KEY = 'salon-chat-session';
 const MODEL_STORAGE_KEY = 'salon-chat-model';
 
+// Cloudflare Zero Trust service token - using Vite's import.meta.env
+const SERVICE_TOKEN_CLIENT_ID = import.meta.env.VITE_SERVICE_TOKEN_CLIENT_ID || '';
+const SERVICE_TOKEN_CLIENT_SECRET = import.meta.env.VITE_SERVICE_TOKEN_CLIENT_SECRET || '';
+
 /**
  * CloudflareChatService - Handles communication with Cloudflare Worker backend
  */
@@ -93,6 +97,22 @@ export class CloudflareChatService {
   }
 
   /**
+   * Add Zero Trust service token headers to request
+   */
+  private addServiceTokenHeaders(headers: HeadersInit = {}): HeadersInit {
+    return headers;
+    // const updatedHeaders = new Headers(headers);
+    // updatedHeaders.set('Content-Type', 'application/json');
+    
+    // if (SERVICE_TOKEN_CLIENT_ID && SERVICE_TOKEN_CLIENT_SECRET) {
+    //   updatedHeaders.set('CF-Access-Client-Id', import.meta.env.VITE_SERVICE_TOKEN_CLIENT_ID);
+    //   updatedHeaders.set('CF-Access-Client-Secret', import.meta.env.VITE_SERVICE_TOKEN_CLIENT_SECRET);
+    // }
+    
+    // return updatedHeaders;
+  }
+
+  /**
    * Send message to backend and process response
    */
   async sendMessage(content: string, model?: string): Promise<ChatMessage[]> {
@@ -136,9 +156,7 @@ export class CloudflareChatService {
       // Call backend API
       const response = await fetch(`${this.apiUrl}/api/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: this.addServiceTokenHeaders(),
         body: JSON.stringify(payload)
       });
 
@@ -187,9 +205,7 @@ export class CloudflareChatService {
     try {
       const response = await fetch(`${this.apiUrl}/api/chat/${this.sessionId}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: this.addServiceTokenHeaders()
       });
 
       if (!response.ok) {
@@ -225,9 +241,7 @@ export class CloudflareChatService {
       try {
         await fetch(`${this.apiUrl}/api/chat/${this.sessionId}`, {
           method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          }
+          headers: this.addServiceTokenHeaders()
         });
       } catch (error) {
         console.error('Error clearing chat session on server:', error);
@@ -264,9 +278,7 @@ export class CloudflareChatService {
     try {
       const response = await fetch(`${this.apiUrl}/api/models`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: this.addServiceTokenHeaders()
       });
 
       if (!response.ok) {
@@ -293,9 +305,7 @@ export class CloudflareChatService {
 
       const response = await fetch(`${this.apiUrl}/api/model`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: this.addServiceTokenHeaders()
       });
 
       if (!response.ok) {
@@ -319,9 +329,7 @@ export class CloudflareChatService {
     try {
       const response = await fetch(`${this.apiUrl}/api/model`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: this.addServiceTokenHeaders(),
         body: JSON.stringify({ model })
       });
 

@@ -49,10 +49,36 @@ Create a `.env` file from `.env.example`:
 # Required for frontend
 VITE_API_URL=https://salon-chat-backend.your-account.workers.dev
 
+# Cloudflare Zero Trust Service Tokens
+VITE_SERVICE_TOKEN_CLIENT_ID=your_client_id_here.access
+VITE_SERVICE_TOKEN_CLIENT_SECRET=your_client_secret_here
+
 # Optional - use OpenAI/Anthropic instead of Workers AI
 # OPENAI_API_KEY=your_openai_key
 # ANTHROPIC_API_KEY=your_anthropic_key
 ```
+
+### Zero Trust Configuration
+
+To set up the Cloudflare Zero Trust service tokens:
+
+1. Run the token generation script:
+   ```bash
+   cd packages/chat
+   node scripts/generate-token.js create
+   ```
+
+2. Configure the generated tokens in Cloudflare Zero Trust dashboard:
+   - Go to Zero Trust → Access → Service Auth
+   - Create a new service token with the generated credentials
+   - Copy the generated tokens to your `.env` file
+
+3. Update environment variables:
+   ```bash
+   cd packages/chat
+   cp .env.example .env
+   # Edit .env with the generated tokens
+   ```
 
 ## Development
 

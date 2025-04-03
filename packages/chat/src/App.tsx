@@ -68,9 +68,27 @@ const App: React.FC = () => {
   const [currentModel, setCurrentModel] = useState<string>('');
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [userScrolled, setUserScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    // Check initially
+    checkMobile();
+    
+    // Add event listener for resize
+    window.addEventListener('resize', checkMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Initialize chat and load model
   useEffect(() => {
@@ -112,6 +130,36 @@ const App: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [modelDropdownOpen]);
+  
+  // Handle keyboard visibility on mobile
+  useEffect(() => {
+    if (!isMobile) return;
+    
+    const handleFocus = () => {
+      // Small delay to let the keyboard appear
+      setTimeout(() => {
+        resetScroll();
+      }, 300);
+    };
+    
+    const handleBlur = () => {
+      // Restore scroll when keyboard disappears
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 100);
+    };
+    
+    const inputElement = inputRef.current;
+    if (inputElement) {
+      inputElement.addEventListener('focus', handleFocus);
+      inputElement.addEventListener('blur', handleBlur);
+      
+      return () => {
+        inputElement.removeEventListener('focus', handleFocus);
+        inputElement.removeEventListener('blur', handleBlur);
+      };
+    }
+  }, [isMobile, inputRef.current]);
   
   // Detect user scroll
   useEffect(() => {
@@ -222,6 +270,11 @@ const App: React.FC = () => {
     
     // Reset scroll position to bottom
     resetScroll();
+    
+    // On mobile, blur the input to hide keyboard
+    if (isMobile && inputRef.current) {
+      inputRef.current.blur();
+    }
     
     // Then start loading state for assistant response
     setLoading(true);
@@ -471,6 +524,7 @@ saved_at: ${new Date().toLocaleString()}
         
         <form className="salon-message-form" onSubmit={handleSubmit}>
           <input
+            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}

@@ -16,6 +16,21 @@ const MAX_RELEVANT_DOCS = 3;
 
 // ----------------- Router Setup -----------------
 
+/**
+ * Verify Zero Trust authentication
+ */
+async function verifyZeroTrustAuth(request) {
+  // Check for CF-Access-JWT-Assertion header (user authenticated through Zero Trust)
+  const jwtToken = request.headers.get('CF-Access-JWT-Assertion');
+  
+  // Check for service token (backend-to-backend communication)
+  const clientId = request.headers.get('CF-Access-Client-Id');
+  const clientSecret = request.headers.get('CF-Access-Client-Secret');
+  
+  // Request is authenticated if either JWT token or service token is present
+  return !!(jwtToken || (clientId && clientSecret));
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -24,6 +39,15 @@ export default {
     // Handle CORS for cross-origin requests
     if (request.method === "OPTIONS") {
       return handleCORS();
+    }
+    
+    // Verify Zero Trust authentication
+    const isAuthenticated = await verifyZeroTrustAuth(request);
+    if (!isAuthenticated) {
+      return new Response(JSON.stringify({ error: "Unauthorized - Zero Trust authentication required" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" }
+      });
     }
     
     try {
